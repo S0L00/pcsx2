@@ -1042,6 +1042,7 @@ set(pcsx2FinalSources
 )
 
 set(pcsx2FinalLibs
+    chdr-static
     Utilities
     x86emitter
     fmt::fmt
