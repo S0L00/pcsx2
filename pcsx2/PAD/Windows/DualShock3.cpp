@@ -175,7 +175,7 @@ struct LightState
 	// Have to make one or the other non-zero to turn on light.
 	unsigned char dunno[2];
 	// 0 is fully lit.
-	unsigned char dimness;
+	[[maybe_unused]] unsigned char dimness;
 	// Have to make non-zero to turn on light.
 	unsigned char on;
 };
@@ -184,10 +184,10 @@ struct LightState
 struct DS3Command
 {
 	unsigned char id;
-	unsigned char unsure;
+	[[maybe_unused]] unsigned char unsure;
 	// Small is first, then big.
 	MotorState motors[2];
-	unsigned char noClue[4];
+	[[maybe_unused]] unsigned char noClue[4];
 	// 2 is pad 1 light, 4 is pad 2, 8 is pad 3, 16 is pad 4.  No clue about the others.
 	unsigned char lightFlags;
 	// Lights are in reverse order.  pad 1 is last.
@@ -199,13 +199,12 @@ struct DS3Command
 
 int CharToAxis(unsigned char c)
 {
-	int v = (int)c + ((unsigned int)c >> 7);
 	return ((c - 128) * FULLY_DOWN) >> 7;
 }
 
 int CharToButton(unsigned char c)
 {
-	int v = (int)c + ((unsigned int)c >> 7);
+	const int v = (int)c + ((unsigned int)c >> 7);
 	return (v * FULLY_DOWN) >> 8;
 }
 
