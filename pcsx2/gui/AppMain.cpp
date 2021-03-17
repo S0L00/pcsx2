@@ -422,6 +422,7 @@ wxMessageOutput* Pcsx2AppTraits::CreateMessageOutput()
 //  Pcsx2StandardPaths
 // --------------------------------------------------------------------------------------
 #ifdef wxUSE_STDPATHS
+#ifndef __APPLE__ // macOS uses wx's defaults
 class Pcsx2StandardPaths : public wxStandardPaths
 {
 public:
@@ -462,11 +463,16 @@ public:
 #endif
 
 };
+#endif // ifdef __APPLE__
 
 wxStandardPaths& Pcsx2AppTraits::GetStandardPaths()
 {
+#ifdef __APPLE__
+	return _parent::GetStandardPaths();
+#else
 	static Pcsx2StandardPaths stdPaths;
 	return stdPaths;
+#endif
 }
 #endif
 
@@ -662,6 +668,11 @@ void Pcsx2App::HandleEvent(wxEvtHandler* handler, wxEventFunction func, wxEvent&
 		// Saved state load failed prior to the system getting corrupted (ie, file not found
 		// or some zipfile error) -- so log it and resume emulation.
 		Console.Warning( ex.FormatDiagnosticMessage() );
+#ifndef DISABLE_RECORDING
+		if (g_InputRecording.IsInitialLoad())
+			g_InputRecording.FailedSavestate();
+#endif
+
 		CoreThread.Resume();
 	}
 	// ----------------------------------------------------------------------------
@@ -1020,7 +1031,11 @@ void Pcsx2App::OpenGsPanel()
 	gsFrame->ShowFullScreen( g_Conf->GSWindow.IsFullscreen );
 
 #ifndef DISABLE_RECORDING
-	// Disable recording controls that only make sense if the game is running
+	// Enable New & Play after the first game load of the session
+	sMainFrame.enableRecordingMenuItem(MenuId_Recording_New, !g_InputRecording.IsActive());
+	sMainFrame.enableRecordingMenuItem(MenuId_Recording_Play, true);
+
+	// Enable recording menu options as the game is now running
 	sMainFrame.enableRecordingMenuItem(MenuId_Recording_FrameAdvance, true);
 	sMainFrame.enableRecordingMenuItem(MenuId_Recording_TogglePause, true);
 	sMainFrame.enableRecordingMenuItem(MenuId_Recording_ToggleRecordingMode, g_InputRecording.IsActive());
@@ -1138,7 +1153,8 @@ protected:
 
 		CoreThread.ResetQuick();
 		symbolMap.Clear();
-		CBreakPoints::SetSkipFirst(0);
+		CBreakPoints::SetSkipFirst(BREAKPOINT_EE, 0);
+		CBreakPoints::SetSkipFirst(BREAKPOINT_IOP, 0);
 
 		CDVDsys_SetFile(CDVD_SourceType::Iso, g_Conf->CurrentIso );
 		if( m_UseCDVDsrc )
@@ -1167,7 +1183,10 @@ void Pcsx2App::SysExecute( CDVD_SourceType cdvdsrc, const wxString& elf_override
 {
 	SysExecutorThread.PostEvent( new SysExecEvent_Execute(cdvdsrc, elf_override) );
 #ifndef DISABLE_RECORDING
-	g_InputRecording.RecordingReset();
+	if (g_Conf->EmuOptions.EnableRecordingTools)
+	{
+		g_InputRecording.RecordingReset();
+	}
 #endif
 }
 

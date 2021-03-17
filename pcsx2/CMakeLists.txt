@@ -208,7 +208,6 @@ set(pcsx2CDVDSources
 	CDVD/OutputIsoFile.cpp
 	CDVD/ChunksCache.cpp
 	CDVD/CompressedFileReader.cpp
-	CDVD/ChdFileReader.cpp
 	CDVD/CsoFileReader.cpp
 	CDVD/GzippedFileReader.cpp
 	CDVD/IsoFS/IsoFile.cpp
@@ -227,7 +226,6 @@ set(pcsx2CDVDHeaders
 	CDVD/ChunksCache.h
 	CDVD/CompressedFileReader.h
 	CDVD/CompressedFileReaderUtils.h
-	CDVD/ChdFileReader.h
 	CDVD/CsoFileReader.h
 	CDVD/GzippedFileReader.h
 	CDVD/IsoFileFormats.h
@@ -256,7 +254,6 @@ set(pcsx2SPU2Sources
 	SPU2/SndOut.cpp
 	SPU2/SndOut_SDL.cpp
 	SPU2/spu2freeze.cpp
-	SPU2/spu2replay.cpp
 	SPU2/spu2sys.cpp
 	SPU2/Timestretcher.cpp
 	SPU2/Wavedump_wav.cpp
@@ -281,13 +278,13 @@ set(pcsx2SPU2Headers
 	SPU2/defs.h
 	SPU2/Dma.h
 	SPU2/Global.h
+	SPU2/interpolate_table.h
 	SPU2/Lowpass.h
 	SPU2/Mixer.h
 	SPU2/spu2.h
 	SPU2/regs.h
 	SPU2/SndOut.h
 	SPU2/spdif.h
-	SPU2/spu2replay.h
 	SPU2/WavFile.h
 	SPU2/Linux/Alsa.h
 	SPU2/Linux/Config.h
@@ -317,6 +314,17 @@ compile_gresources( pcsx2DEV9UIHeaders
 
 # DEV9 sources
 set(pcsx2DEV9Sources
+	DEV9/ATA/Commands/ATA_Command.cpp
+	DEV9/ATA/Commands/ATA_CmdDMA.cpp
+	DEV9/ATA/Commands/ATA_CmdExecuteDeviceDiag.cpp
+	DEV9/ATA/Commands/ATA_CmdNoData.cpp
+	DEV9/ATA/Commands/ATA_CmdPIOData.cpp
+	DEV9/ATA/Commands/ATA_CmdSMART.cpp
+	DEV9/ATA/Commands/ATA_SCE.cpp
+	DEV9/ATA/ATA_Info.cpp
+	DEV9/ATA/ATA_State.cpp
+	DEV9/ATA/ATA_Transfer.cpp
+	DEV9/ATA/HddCreate.cpp
 	DEV9/smap.cpp
 	DEV9/DEV9.cpp
 	DEV9/flash.cpp
@@ -329,8 +337,9 @@ set(pcsx2DEV9Sources
 
 # DEV9 headers
 set(pcsx2DEV9Headers
+	DEV9/ATA/ATA.h
+	DEV9/ATA/HddCreate.h
 	DEV9/DEV9.h
-	DEV9/ata.h
 	DEV9/net.h
 	DEV9/pcap_io.h
 	DEV9/smap.h
@@ -602,6 +611,7 @@ set(pcsx2GuiSources
 	gui/Dialogs/McdConfigDialog.cpp
 	gui/Dialogs/PickUserModeDialog.cpp
 	gui/Dialogs/SysConfigDialog.cpp
+	gui/Dialogs/IPCDialog.cpp
 	gui/Debugger/BreakpointWindow.cpp
 	gui/Debugger/CtrlDisassemblyView.cpp
 	gui/Debugger/CtrlRegisterList.cpp
@@ -1122,7 +1132,9 @@ if (APPLE)
 	)
 
 	target_sources(${Output} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/gui/Resources/PCSX2.icns")
+	target_sources(${Output} PRIVATE "${CMAKE_SOURCE_DIR}/bin/GameIndex.yaml")
 	set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/gui/Resources/PCSX2.icns" PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+	set_source_files_properties("${CMAKE_SOURCE_DIR}/bin/GameIndex.yaml" PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
 
 	# If they say to skip postprocess bundle, leave the target in but make it so they have
 	# to manually run it
@@ -1141,8 +1153,8 @@ endif()
 
 if(NOT DISABLE_SETCAP)
     if(PACKAGE_MODE)
-        install(CODE "execute_process(COMMAND /bin/bash -c \"echo 'Enabling networking capability on Linux...';set -x; [ -f ${CMAKE_INSTALL_FULL_BINDIR}/${Output} ] && sudo setcap 'CAP_NET_RAW+eip CAP_NET_ADMIN+eip' ${CMAKE_INSTALL_FULL_BINDIR}/${Output}; set +x\")")
+        install(CODE "execute_process(COMMAND /bin/bash -c \"echo 'Enabling networking capability on Linux...';set -x; [ -f '${CMAKE_INSTALL_FULL_BINDIR}/${Output}' ] && sudo setcap 'CAP_NET_RAW+eip CAP_NET_ADMIN+eip' '${CMAKE_INSTALL_FULL_BINDIR}/${Output}'; set +x\")")
     else()
-        install(CODE "execute_process(COMMAND /bin/bash -c \"echo 'Enabling networking capability on Linux...';set -x; [ -f ${CMAKE_SOURCE_DIR}/bin/${Output} ] && sudo setcap 'CAP_NET_RAW+eip CAP_NET_ADMIN+eip' ${CMAKE_SOURCE_DIR}/bin/${Output}; set +x\")")
+        install(CODE "execute_process(COMMAND /bin/bash -c \"echo 'Enabling networking capability on Linux...';set -x; [ -f '${CMAKE_SOURCE_DIR}/bin/${Output}' ] && sudo setcap 'CAP_NET_RAW+eip CAP_NET_ADMIN+eip' '${CMAKE_SOURCE_DIR}/bin/${Output}'; set +x\")")
     endif()
 endif()
