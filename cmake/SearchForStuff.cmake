@@ -211,8 +211,6 @@ if(ZLIB_FOUND)
 	include_directories(${ZLIB_INCLUDE_DIRS})
 endif()
 
-add_subdirectory(3rdparty/libchdr/libchdr EXCLUDE_FROM_ALL)
-
 find_package(HarfBuzz)
 
 if(HarfBuzz_FOUND)
